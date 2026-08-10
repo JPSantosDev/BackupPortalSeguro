@@ -9,6 +9,7 @@ $usuario = usuarioLogado();
 $pdo = getConexao();
 $stmt = $pdo->prepare('UPDATE usuarios SET tutorial_visto = 1 WHERE id = ?');
 $stmt->execute([$usuario['id']]);
+
 $_SESSION['usuario_tutorial_visto'] = 1;
 
 echo json_encode(['ok' => true]);
