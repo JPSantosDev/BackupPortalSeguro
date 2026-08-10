@@ -1,0 +1,4 @@
+# Impede execução de scripts dentro da pasta de anexos enviados pelos usuários
+<FilesMatch "\.(php|phtml|php\d)$">
+  Require all denied
+</FilesMatch>
