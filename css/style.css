@@ -48,6 +48,34 @@
   --sidebar-w: 264px;
 }
 
+.password-wrapper {
+  position: relative;
+}
+
+.password-wrapper input {
+  padding-right: 44px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.toggle-senha {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  color: #6b7280;
+}
+
+.toggle-senha:hover {
+  color: #10233F;
+}
+
 * { box-sizing: border-box; }
 
 html, body {

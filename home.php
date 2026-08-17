@@ -13,9 +13,14 @@ if ($tipo === 1) {
     $porStatus = ['pendente' => 0, 'em_andamento' => 0, 'resolvida' => 0, 'arquivada' => 0];
     foreach ($stmt->fetchAll() as $row) { $porStatus[$row['status']] = (int) $row['qtd']; }
 
-    $stmt = $pdo->prepare('SELECT d.id, d.descricao, d.status, d.criado_em, t.nome AS tipo_nome
-                            FROM denuncias d JOIN tipos_denuncia t ON t.id = d.tipo_denuncia_id
-                            WHERE d.usuario_id = ? ORDER BY d.criado_em DESC LIMIT 4');
+    $stmt = $pdo->prepare('SELECT d.id, d.descricao, d.status, d.criado_em,
+                            COALESCE(
+                              (SELECT GROUP_CONCAT(DISTINCT t.nome ORDER BY t.nome SEPARATOR ", ")
+                               FROM denuncia_tipos dt JOIN tipos_denuncia t ON t.id = dt.tipo_denuncia_id
+                               WHERE dt.denuncia_id = d.id),
+                              (SELECT t2.nome FROM tipos_denuncia t2 WHERE t2.id = d.tipo_denuncia_id LIMIT 1)
+                            ) AS tipo_nome
+                            FROM denuncias d WHERE d.usuario_id = ? ORDER BY d.criado_em DESC LIMIT 4');
     $stmt->execute([$usuario['id']]);
     $recentes = $stmt->fetchAll();
 }
@@ -25,8 +30,14 @@ if ($tipo === 2) {
     $porStatus = ['pendente' => 0, 'em_andamento' => 0, 'resolvida' => 0, 'arquivada' => 0];
     foreach ($stmt->fetchAll() as $row) { $porStatus[$row['status']] = (int) $row['qtd']; }
 
-    $stmt = $pdo->query("SELECT d.id, d.descricao, d.status, d.anonima, d.criado_em, t.nome AS tipo_nome
-                          FROM denuncias d JOIN tipos_denuncia t ON t.id = d.tipo_denuncia_id
+    $stmt = $pdo->query("SELECT d.id, d.descricao, d.status, d.anonima, d.criado_em,
+                          COALESCE(
+                            (SELECT GROUP_CONCAT(DISTINCT t.nome ORDER BY t.nome SEPARATOR ', ')
+                             FROM denuncia_tipos dt JOIN tipos_denuncia t ON t.id = dt.tipo_denuncia_id
+                             WHERE dt.denuncia_id = d.id),
+                            (SELECT t2.nome FROM tipos_denuncia t2 WHERE t2.id = d.tipo_denuncia_id LIMIT 1)
+                          ) AS tipo_nome
+                          FROM denuncias d
                           WHERE d.status IN ('pendente','em_andamento')
                           ORDER BY d.criado_em ASC LIMIT 5");
     $recentes = $stmt->fetchAll();
@@ -40,9 +51,18 @@ if ($tipo === 3) {
     $porStatus = ['pendente' => 0, 'em_andamento' => 0, 'resolvida' => 0, 'arquivada' => 0];
     foreach ($stmt->fetchAll() as $row) { $porStatus[$row['status']] = (int) $row['qtd']; }
 
-    $stmt = $pdo->query("SELECT t.nome, COUNT(d.id) qtd FROM tipos_denuncia t
-                          LEFT JOIN denuncias d ON d.tipo_denuncia_id = t.id
-                          GROUP BY t.id ORDER BY qtd DESC LIMIT 6");
+    $stmt = $pdo->query("SELECT t.nome,
+                          (
+                            (SELECT COUNT(*) FROM denuncias d
+                             WHERE d.tipo_denuncia_id = t.id
+                               AND NOT EXISTS (
+                                   SELECT 1 FROM denuncia_tipos dt
+                                   WHERE dt.denuncia_id = d.id AND dt.tipo_denuncia_id = t.id
+                               ))
+                            + (SELECT COUNT(*) FROM denuncia_tipos dt WHERE dt.tipo_denuncia_id = t.id)
+                          ) AS qtd
+                          FROM tipos_denuncia t
+                          ORDER BY qtd DESC LIMIT 6");
     $porTipo = $stmt->fetchAll();
 }
 

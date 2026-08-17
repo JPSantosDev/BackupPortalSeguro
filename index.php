@@ -58,7 +58,13 @@ $csrf = tokenCsrf();
           </div>
           <div class="field">
             <label for="senha">Senha</label>
-            <input type="password" id="senha" name="senha" required placeholder="••••••••">
+            <div class="password-wrapper">
+              <input type="password" id="senha" name="senha" required placeholder="••••••••">
+              <button type="button" class="toggle-senha" data-target="senha" aria-label="Mostrar senha">
+                <svg class="icon-eye" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg class="icon-eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a20.87 20.87 0 0 1 5.06-6.06M9.9 4.24A10.87 10.87 0 0 1 12 4c7 0 11 8 11 8a20.87 20.87 0 0 1-3.22 4.44M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              </button>
+            </div>
           </div>
           <button type="submit" class="btn btn-primary btn-block">Entrar</button>
         </form>
@@ -91,11 +97,23 @@ $csrf = tokenCsrf();
           </div>
           <div class="field">
             <label for="senha_c">Senha</label>
-            <input type="password" id="senha_c" name="senha" required minlength="6" placeholder="Mínimo 6 caracteres">
+            <div class="password-wrapper">
+              <input type="password" id="senha_c" name="senha" required minlength="6" placeholder="Mínimo 6 caracteres">
+              <button type="button" class="toggle-senha" data-target="senha_c" aria-label="Mostrar senha">
+                <svg class="icon-eye" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg class="icon-eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a20.87 20.87 0 0 1 5.06-6.06M9.9 4.24A10.87 10.87 0 0 1 12 4c7 0 11 8 11 8a20.87 20.87 0 0 1-3.22 4.44M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              </button>
+            </div>
           </div>
           <div class="field">
             <label for="senha_conf">Confirmar senha</label>
-            <input type="password" id="senha_conf" name="senha_confirmacao" required minlength="6" placeholder="Repita a senha">
+            <div class="password-wrapper">
+              <input type="password" id="senha_conf" name="senha_confirmacao" required minlength="6" placeholder="Repita a senha">
+              <button type="button" class="toggle-senha" data-target="senha_conf" aria-label="Mostrar senha">
+                <svg class="icon-eye" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg class="icon-eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a20.87 20.87 0 0 1 5.06-6.06M9.9 4.24A10.87 10.87 0 0 1 12 4c7 0 11 8 11 8a20.87 20.87 0 0 1-3.22 4.44M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              </button>
+            </div>
           </div>
           <button type="submit" class="btn btn-primary btn-block">Criar minha conta</button>
         </form>
@@ -118,6 +136,20 @@ $csrf = tokenCsrf();
       cpfInput.value = v;
     });
   }
+
+  document.querySelectorAll('.toggle-senha').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const input = document.getElementById(btn.dataset.target);
+      const iconEye = btn.querySelector('.icon-eye');
+      const iconEyeOff = btn.querySelector('.icon-eye-off');
+
+      const mostrando = input.type === 'text';
+      input.type = mostrando ? 'password' : 'text';
+      iconEye.style.display = mostrando ? 'inline' : 'none';
+      iconEyeOff.style.display = mostrando ? 'none' : 'inline';
+      btn.setAttribute('aria-label', mostrando ? 'Mostrar senha' : 'Ocultar senha');
+    });
+  });
 </script>
 </body>
 </html>

@@ -17,7 +17,16 @@ if (isset($_GET['editar'])) {
     $editar = $stmt->fetch();
 }
 
-$tipos = $pdo->query('SELECT t.*, (SELECT COUNT(*) FROM denuncias d WHERE d.tipo_denuncia_id = t.id) AS total_uso
+$tipos = $pdo->query('SELECT t.*, (
+                           SELECT COUNT(*) FROM denuncias d
+                           WHERE d.tipo_denuncia_id = t.id
+                             AND NOT EXISTS (
+                                 SELECT 1 FROM denuncia_tipos dt
+                                 WHERE dt.denuncia_id = d.id AND dt.tipo_denuncia_id = t.id
+                             )
+                       ) + (
+                           SELECT COUNT(*) FROM denuncia_tipos dt WHERE dt.tipo_denuncia_id = t.id
+                       ) AS total_uso
                        FROM tipos_denuncia t ORDER BY t.nome')->fetchAll();
 ?>
 

@@ -14,7 +14,11 @@ if (!csrfValido($_POST['csrf_token'] ?? null)) {
 }
 
 $cpf            = somenteDigitos($_POST['cpf'] ?? '');
-$tipoDenunciaId = (int) ($_POST['tipo_denuncia_id'] ?? 0);
+$tipoDenunciaIds = $_POST['tipo_denuncia_id'] ?? [];
+if (!is_array($tipoDenunciaIds)) {
+    $tipoDenunciaIds = [$tipoDenunciaIds];
+}
+$tipoDenunciaIds = array_values(array_unique(array_filter(array_map('intval', $tipoDenunciaIds))));
 $descricao      = trim($_POST['descricao'] ?? '');
 $local          = trim($_POST['local_ocorrencia'] ?? '');
 $dataOcorrencia = trim($_POST['data_ocorrencia'] ?? '');
@@ -24,21 +28,25 @@ if (!cpfValido($cpf)) {
     header('Location: denuncia_cpf.php');
     exit;
 }
-if ($tipoDenunciaId <= 0 || $descricao === '') {
-    flashSet('danger', 'Selecione o tipo de ocorrência e descreva o que aconteceu.');
+if ($tipoDenunciaIds === [] || $descricao === '') {
+    flashSet('danger', 'Selecione ao menos um tipo de ocorrência e descreva o que aconteceu.');
     header('Location: denuncia_cpf.php');
     exit;
 }
 
 $pdo = getConexao();
 
-$stmt = $pdo->prepare('SELECT id FROM tipos_denuncia WHERE id = ? AND ativo = 1');
-$stmt->execute([$tipoDenunciaId]);
-if (!$stmt->fetch()) {
-    flashSet('danger', 'Tipo de denúncia inválido.');
+$inQuery = implode(',', array_fill(0, count($tipoDenunciaIds), '?'));
+$stmt = $pdo->prepare("SELECT id FROM tipos_denuncia WHERE id IN ({$inQuery}) AND ativo = 1");
+$stmt->execute($tipoDenunciaIds);
+$tiposValidos = $stmt->fetchAll(PDO::FETCH_COLUMN, 0);
+if (count($tiposValidos) !== count($tipoDenunciaIds)) {
+    flashSet('danger', 'Um ou mais tipos de denúncia são inválidos.');
     header('Location: denuncia_cpf.php');
     exit;
 }
+
+$tipoDenunciaId = $tipoDenunciaIds[0];
 
 try {
     $caminhoImagem = salvarAnexo('anexo_imagem', TIPOS_IMAGEM_PERMITIDOS, 8);
@@ -56,20 +64,35 @@ $usuarioExistente = $stmt->fetch();
 
 $protocolo = gerarProtocolo($pdo);
 
-$stmt = $pdo->prepare('INSERT INTO denuncias
-    (usuario_id, cpf_denunciante, protocolo, tipo_denuncia_id, anonima, local_ocorrencia, envolvidos, data_ocorrencia, descricao, anexo_imagem, anexo_audio, status)
-    VALUES (?, ?, ?, ?, 0, ?, NULL, ?, ?, ?, ?, "pendente")');
-$stmt->execute([
-    $usuarioExistente['id'] ?? null,
-    $usuarioExistente ? null : $cpf,
-    $protocolo,
-    $tipoDenunciaId,
-    $local !== '' ? $local : null,
-    $dataOcorrencia !== '' ? $dataOcorrencia : null,
-    $descricao,
-    $caminhoImagem,
-    $caminhoAudio,
-]);
+try {
+    $pdo->beginTransaction();
+
+    $stmt = $pdo->prepare('INSERT INTO denuncias
+        (usuario_id, cpf_denunciante, protocolo, tipo_denuncia_id, anonima, local_ocorrencia, envolvidos, data_ocorrencia, descricao, anexo_imagem, anexo_audio, status)
+        VALUES (?, ?, ?, ?, 0, ?, NULL, ?, ?, ?, ?, "pendente")');
+    $stmt->execute([
+        $usuarioExistente['id'] ?? null,
+        $usuarioExistente ? null : $cpf,
+        $protocolo,
+        $tipoDenunciaId,
+        $local !== '' ? $local : null,
+        $dataOcorrencia !== '' ? $dataOcorrencia : null,
+        $descricao,
+        $caminhoImagem,
+        $caminhoAudio,
+    ]);
+
+    $denunciaId = (int) $pdo->lastInsertId();
+    salvarTiposDenuncia($pdo, $denunciaId, $tipoDenunciaIds);
+    $pdo->commit();
+} catch (Throwable $e) {
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
+    flashSet('danger', 'Não foi possível registrar a denúncia. Tente novamente.');
+    header('Location: denuncia_cpf.php');
+    exit;
+}
 
 $_SESSION['protocolo_gerado'] = $protocolo;
 header('Location: protocolo_gerado.php');

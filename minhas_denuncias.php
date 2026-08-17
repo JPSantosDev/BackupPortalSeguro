@@ -9,8 +9,13 @@ require_once __DIR__ . '/includes/header.php';
 
 $pdo = getConexao();
 
-$stmt = $pdo->prepare('SELECT d.*, t.nome AS tipo_nome FROM denuncias d
-                        JOIN tipos_denuncia t ON t.id = d.tipo_denuncia_id
+$stmt = $pdo->prepare('SELECT d.*, COALESCE(
+                        (SELECT GROUP_CONCAT(DISTINCT t.nome ORDER BY t.nome SEPARATOR ", ")
+                         FROM denuncia_tipos dt JOIN tipos_denuncia t ON t.id = dt.tipo_denuncia_id
+                         WHERE dt.denuncia_id = d.id),
+                        (SELECT t2.nome FROM tipos_denuncia t2 WHERE t2.id = d.tipo_denuncia_id LIMIT 1)
+                       ) AS tipo_nome
+                        FROM denuncias d
                         WHERE d.usuario_id = ? ORDER BY d.criado_em DESC');
 $stmt->execute([$usuario['id']]);
 $denuncias = $stmt->fetchAll();
