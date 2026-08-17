@@ -56,6 +56,17 @@ CREATE TABLE denuncias (
     FOREIGN KEY (atendente_id) REFERENCES usuarios(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
+CREATE TABLE denuncia_tipos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    denuncia_id INT NOT NULL,
+    tipo_denuncia_id INT NOT NULL,
+    criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uniq_denuncia_tipo (denuncia_id, tipo_denuncia_id),
+    KEY idx_denuncia_tipo (tipo_denuncia_id),
+    CONSTRAINT fk_denuncia_tipos_denuncia FOREIGN KEY (denuncia_id) REFERENCES denuncias(id) ON DELETE CASCADE,
+    CONSTRAINT fk_denuncia_tipos_tipo FOREIGN KEY (tipo_denuncia_id) REFERENCES tipos_denuncia(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
 -- --------------------------------------------------------
 -- Dados iniciais
 -- --------------------------------------------------------

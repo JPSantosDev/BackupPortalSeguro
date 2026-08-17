@@ -52,13 +52,13 @@ $flash = flashPegar();
         </div>
 
         <div class="field">
-          <label for="tipo_denuncia_id">Tipo de ocorrência</label>
-          <select id="tipo_denuncia_id" name="tipo_denuncia_id" required>
-            <option value="" disabled selected>Selecione o tipo mais adequado</option>
+          <label for="tipo_denuncia_id">Tipos de ocorrência</label>
+          <select id="tipo_denuncia_id" name="tipo_denuncia_id[]" multiple size="6" required>
             <?php foreach ($tipos as $t): ?>
               <option value="<?= $t['id'] ?>"><?= htmlspecialchars($t['nome']) ?></option>
             <?php endforeach; ?>
           </select>
+          <div class="hint">Você pode selecionar mais de um tipo, se a ocorrência envolver mais de uma situação.</div>
         </div>
 
         <div class="field">
