@@ -14,7 +14,6 @@ function garantirTabelaDenunciaTipos(PDO $pdo): void
 {
     try {
         $pdo->query('SELECT 1 FROM denuncia_tipos LIMIT 1');
-        return;
     } catch (Throwable $e) {
         $pdo->exec('CREATE TABLE denuncia_tipos (
             id INT AUTO_INCREMENT PRIMARY KEY,
@@ -29,6 +28,14 @@ function garantirTabelaDenunciaTipos(PDO $pdo): void
     }
 }
 
+function migrarTiposDenunciaLegados(PDO $pdo): void
+{
+    $pdo->exec('INSERT IGNORE INTO denuncia_tipos (denuncia_id, tipo_denuncia_id)
+        SELECT id, tipo_denuncia_id
+        FROM denuncias
+        WHERE tipo_denuncia_id IS NOT NULL');
+}
+
 function sqlNomeTiposDenuncia(string $alias = 'tipo_nome'): string
 {
     return "(SELECT GROUP_CONCAT(DISTINCT t.nome ORDER BY t.nome SEPARATOR ', ')
@@ -36,11 +43,6 @@ function sqlNomeTiposDenuncia(string $alias = 'tipo_nome'): string
             JOIN tipos_denuncia t ON t.id = dt.tipo_denuncia_id
             WHERE dt.denuncia_id = d.id)
             AS {$alias}";
-}
-
-function sqlNomeTipoDenunciaFallback(string $alias = 'tipo_nome'): string
-{
-    return "(SELECT t.nome FROM tipos_denuncia t WHERE t.id = d.tipo_denuncia_id LIMIT 1) AS {$alias}";
 }
 
 function salvarTiposDenuncia(PDO $pdo, int $denunciaId, array $tipoIds): void
@@ -74,6 +76,7 @@ function getConexao(): PDO
             PDO::ATTR_EMULATE_PREPARES => false,
         ]);
         garantirTabelaDenunciaTipos($pdo);
+        migrarTiposDenunciaLegados($pdo);
     }
     return $pdo;
 }

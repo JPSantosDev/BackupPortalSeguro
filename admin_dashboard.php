@@ -18,12 +18,9 @@ $porStatus = ['pendente' => 0, 'em_andamento' => 0, 'resolvida' => 0, 'arquivada
 foreach ($stmt->fetchAll() as $row) { $porStatus[$row['status']] = (int) $row['qtd']; }
 
 $recentes = $pdo->query("SELECT d.id, d.descricao, d.status, d.anonima, d.criado_em,
-                          COALESCE(
-                            (SELECT GROUP_CONCAT(DISTINCT t.nome ORDER BY t.nome SEPARATOR ', ')
-                             FROM denuncia_tipos dt JOIN tipos_denuncia t ON t.id = dt.tipo_denuncia_id
-                             WHERE dt.denuncia_id = d.id),
-                            (SELECT t2.nome FROM tipos_denuncia t2 WHERE t2.id = d.tipo_denuncia_id LIMIT 1)
-                          ) AS tipo_nome,
+                          (SELECT GROUP_CONCAT(DISTINCT t.nome ORDER BY t.nome SEPARATOR ', ')
+                           FROM denuncia_tipos dt JOIN tipos_denuncia t ON t.id = dt.tipo_denuncia_id
+                           WHERE dt.denuncia_id = d.id) AS tipo_nome,
                           u.nome AS denunciante_nome
                           FROM denuncias d
                           LEFT JOIN usuarios u ON u.id = d.usuario_id

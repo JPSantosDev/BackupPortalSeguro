@@ -43,8 +43,6 @@ if (count($tiposValidos) !== count($tipoDenunciaIds)) {
     exit;
 }
 
-$tipoDenunciaId = $tipoDenunciaIds[0];
-
 $usuario = usuarioLogado();
 
 try {
@@ -60,11 +58,10 @@ try {
     $pdo->beginTransaction();
 
     $stmt = $pdo->prepare('INSERT INTO denuncias
-        (usuario_id, tipo_denuncia_id, anonima, local_ocorrencia, envolvidos, data_ocorrencia, descricao, anexo_imagem, anexo_audio, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, "pendente")');
+        (usuario_id, anonima, local_ocorrencia, envolvidos, data_ocorrencia, descricao, anexo_imagem, anexo_audio, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, "pendente")');
     $stmt->execute([
        $usuario['id'],
-       $tipoDenunciaId,
        $anonima,
        $local !== '' ? $local : null,
        $envolvidos !== '' ? $envolvidos : null,

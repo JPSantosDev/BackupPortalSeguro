@@ -145,7 +145,23 @@ const UPLOAD_DIR = __DIR__ . '/../uploads/denuncias';
 const UPLOAD_URL = 'uploads/denuncias';
 
 const TIPOS_IMAGEM_PERMITIDOS = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
-const TIPOS_AUDIO_PERMITIDOS  = ['audio/webm' => 'webm', 'audio/ogg' => 'ogg', 'audio/mpeg' => 'mp3', 'audio/mp4' => 'm4a', 'audio/wav' => 'wav'];
+const TIPOS_AUDIO_PERMITIDOS  = [
+    'audio/webm' => 'webm',
+    'video/webm' => 'webm',
+    'audio/ogg' => 'ogg',
+    'audio/mpeg' => 'mp3',
+    'audio/mp3' => 'mp3',
+    'audio/mp4' => 'm4a',
+    'video/mp4' => 'mp4',
+    'audio/m4a' => 'm4a',
+    'audio/x-m4a' => 'm4a',
+    'video/quicktime' => 'mov',
+    'audio/wav' => 'wav',
+    'audio/x-wav' => 'wav',
+    'audio/aac' => 'aac',
+    'audio/x-aac' => 'aac',
+    'audio/x-mpeg' => 'mp3',
+];
 
 /**
  * Move um arquivo enviado ($_FILES[campo]) para a pasta de uploads,
@@ -168,8 +184,15 @@ function salvarAnexo(string $campo, array $tiposPermitidos, int $tamanhoMaximoMb
     }
 
     $finfo = new finfo(FILEINFO_MIME_TYPE);
-    $mime = $finfo->file($arquivo['tmp_name']);
-    if (!isset($tiposPermitidos[$mime])) {
+    $mime = strtolower((string) $finfo->file($arquivo['tmp_name']));
+    $mime = strtok($mime, ';') ?: $mime;
+
+    $extensaoArquivo = strtolower(pathinfo($arquivo['name'] ?? '', PATHINFO_EXTENSION));
+    if (isset($tiposPermitidos[$mime])) {
+        $extensao = $tiposPermitidos[$mime];
+    } elseif ($extensaoArquivo !== '' && isset(array_flip($tiposPermitidos)[$extensaoArquivo])) {
+        $extensao = $extensaoArquivo;
+    } else {
         throw new RuntimeException('Formato de arquivo não suportado.');
     }
 
@@ -177,7 +200,7 @@ function salvarAnexo(string $campo, array $tiposPermitidos, int $tamanhoMaximoMb
         mkdir(UPLOAD_DIR, 0755, true);
     }
 
-    $nomeArquivo = bin2hex(random_bytes(16)) . '.' . $tiposPermitidos[$mime];
+    $nomeArquivo = bin2hex(random_bytes(16)) . '.' . $extensao;
     $destino = UPLOAD_DIR . '/' . $nomeArquivo;
 
     if (!move_uploaded_file($arquivo['tmp_name'], $destino)) {

@@ -46,8 +46,6 @@ if (count($tiposValidos) !== count($tipoDenunciaIds)) {
     exit;
 }
 
-$tipoDenunciaId = $tipoDenunciaIds[0];
-
 try {
     $caminhoImagem = salvarAnexo('anexo_imagem', TIPOS_IMAGEM_PERMITIDOS, 8);
     $caminhoAudio  = salvarAnexo('anexo_audio', TIPOS_AUDIO_PERMITIDOS, 15);
@@ -68,13 +66,12 @@ try {
     $pdo->beginTransaction();
 
     $stmt = $pdo->prepare('INSERT INTO denuncias
-        (usuario_id, cpf_denunciante, protocolo, tipo_denuncia_id, anonima, local_ocorrencia, envolvidos, data_ocorrencia, descricao, anexo_imagem, anexo_audio, status)
-        VALUES (?, ?, ?, ?, 0, ?, NULL, ?, ?, ?, ?, "pendente")');
+        (usuario_id, cpf_denunciante, protocolo, anonima, local_ocorrencia, envolvidos, data_ocorrencia, descricao, anexo_imagem, anexo_audio, status)
+        VALUES (?, ?, ?, 0, ?, NULL, ?, ?, ?, ?, "pendente")');
     $stmt->execute([
         $usuarioExistente['id'] ?? null,
         $usuarioExistente ? null : $cpf,
         $protocolo,
-        $tipoDenunciaId,
         $local !== '' ? $local : null,
         $dataOcorrencia !== '' ? $dataOcorrencia : null,
         $descricao,

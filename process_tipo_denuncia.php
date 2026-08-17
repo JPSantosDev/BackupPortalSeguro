@@ -35,16 +35,8 @@ if ($acao === 'salvar') {
     }
 } elseif ($acao === 'excluir') {
     $id = (int) ($_POST['id'] ?? 0);
-    $stmt = $pdo->prepare('SELECT (
-                                (SELECT COUNT(*) FROM denuncias d
-                                 WHERE d.tipo_denuncia_id = ?
-                                   AND NOT EXISTS (
-                                       SELECT 1 FROM denuncia_tipos dt
-                                       WHERE dt.denuncia_id = d.id AND dt.tipo_denuncia_id = ?
-                                   ))
-                                + (SELECT COUNT(*) FROM denuncia_tipos dt WHERE dt.tipo_denuncia_id = ?)
-                            ) AS c');
-    $stmt->execute([$id, $id, $id]);
+    $stmt = $pdo->prepare('SELECT COUNT(*) AS c FROM denuncia_tipos WHERE tipo_denuncia_id = ?');
+    $stmt->execute([$id]);
     if ((int) $stmt->fetch()['c'] > 0) {
         flashSet('danger', 'Não é possível excluir: este tipo já foi usado em denúncias.');
     } else {
